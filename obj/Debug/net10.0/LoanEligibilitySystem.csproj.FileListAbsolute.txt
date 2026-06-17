@@ -159,3 +159,4 @@ C:\Users\naman06\LoanEligibilitySystem\obj\Debug\net10.0\refint\LoanEligibilityS
 C:\Users\naman06\LoanEligibilitySystem\obj\Debug\net10.0\LoanEligibilitySystem.pdb
 C:\Users\naman06\LoanEligibilitySystem\obj\Debug\net10.0\LoanEligibilitySystem.genruntimeconfig.cache
 C:\Users\naman06\LoanEligibilitySystem\obj\Debug\net10.0\ref\LoanEligibilitySystem.dll
+C:\Users\naman06\LoanEligibilitySystem\obj\Debug\net10.0\LoanEligibilitySystem.sourcelink.json
