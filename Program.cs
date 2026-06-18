@@ -16,6 +16,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ILoanRepository, LoanRepository>();
 builder.Services.AddScoped<ILoanService, LoanService>();
 
+builder.Services.AddScoped<ILoanEligibilityService, LoanEligibilityService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

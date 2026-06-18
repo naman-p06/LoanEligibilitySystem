@@ -45,4 +45,8 @@ public class LoanApplication
     public string Remarks { get; set; } = string.Empty;
 
     public DateTime AppliedDate { get; set; } = DateTime.UtcNow;
+
+    
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal CalculatedEMI { get; set; }
 }

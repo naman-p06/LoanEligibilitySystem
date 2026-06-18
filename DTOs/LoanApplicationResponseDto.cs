@@ -8,4 +8,5 @@ public class LoanApplicationResponseDto
     public string Status { get; set; } = string.Empty;
     public string Remarks { get; set; } = string.Empty;
     public DateTime AppliedDate { get; set; }
+    public decimal CalculatedEMI { get; set; }
 }
