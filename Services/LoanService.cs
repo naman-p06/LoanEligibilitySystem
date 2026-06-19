@@ -1,6 +1,7 @@
-using LoanEligibilitySystem.DTOs;
+
 using LoanEligibilitySystem.Models;
 using LoanEligibilitySystem.Repositories;
+using LoanEligibilitySystem.DTOs;
 
 namespace LoanEligibilitySystem.Services;
 
@@ -56,7 +57,12 @@ public class LoanService : ILoanService
         if (application == null) return null;
         return MapToResponse(application);
     }
-
+    public async Task<LoanApplicationResponseDto?> GetByApplicationNumberAsync(string applicationNumber)
+    {
+        var application = await _repository.GetByApplicationNumberAsync(applicationNumber);
+        if (application == null) return null;
+        return MapToResponse(application);
+    }
     private static LoanApplicationResponseDto MapToResponse(LoanApplication app)
     {
         return new LoanApplicationResponseDto
@@ -69,5 +75,9 @@ public class LoanService : ILoanService
             Remarks           = app.Remarks,
             AppliedDate       = app.AppliedDate
         };
+    }
+    public async Task<DashboardDto> GetDashboardAsync()
+    {
+        return await _repository.GetDashboardStatsAsync();
     }
 }

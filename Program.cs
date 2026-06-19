@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using LoanEligibilitySystem.Data;
 using LoanEligibilitySystem.Repositories;
 using LoanEligibilitySystem.Services;
+using LoanEligibilitySystem.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +26,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();

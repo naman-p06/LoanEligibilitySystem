@@ -1,4 +1,5 @@
 using LoanEligibilitySystem.Models;
+using LoanEligibilitySystem.DTOs;
 
 namespace LoanEligibilitySystem.Repositories;
 
@@ -9,4 +10,5 @@ public interface ILoanRepository
     Task<LoanApplication?> GetByIdAsync(int id);
     Task<LoanApplication?> GetByApplicationNumberAsync(string applicationNumber);
     Task<string> GenerateApplicationNumberAsync();
+    Task<DashboardDto> GetDashboardStatsAsync();
 }

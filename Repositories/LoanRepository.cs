@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using LoanEligibilitySystem.Data;
 using LoanEligibilitySystem.Models;
+using LoanEligibilitySystem.DTOs;
 
 namespace LoanEligibilitySystem.Repositories;
 
@@ -44,5 +45,20 @@ public class LoanRepository : ILoanRepository
     {
         var count = await _context.LoanApplications.CountAsync();
         return $"APP{1001 + count}";
+    }
+    public async Task<DashboardDto> GetDashboardStatsAsync()
+    {
+        var applications = await _context.LoanApplications.ToListAsync();
+
+        return new DashboardDto
+        {
+            TotalApplications      = applications.Count,
+            Approved               = applications.Count(a => a.Status == "Approved"),
+            Rejected               = applications.Count(a => a.Status == "Rejected"),
+            UnderReview            = applications.Count(a => a.Status == "Under Review"),
+            TotalLoanAmountApproved = applications
+                .Where(a => a.Status == "Approved")
+                .Sum(a => a.LoanAmount)
+        };
     }
 }
