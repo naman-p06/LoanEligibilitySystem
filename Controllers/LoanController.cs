@@ -23,9 +23,16 @@ public class LoanController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? sortBy = null,
+        [FromQuery] string? order = "desc")
     {
-        var result = await _service.GetAllAsync();
+        if (page < 1) page = 1;
+        if (pageSize < 1 || pageSize > 100) pageSize = 10;
+
+        var result = await _service.GetAllPagedAsync(page, pageSize, sortBy, order);
         return Ok(result);
     }
 

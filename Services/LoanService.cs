@@ -80,4 +80,38 @@ public class LoanService : ILoanService
     {
         return await _repository.GetDashboardStatsAsync();
     }
+
+    public async Task<PagedResultDto<LoanApplicationResponseDto>> GetAllPagedAsync(
+        int page, int pageSize, string? sortBy, string? order)
+    {
+        var applications = await _repository.GetAllAsync();
+
+        // Sorting
+        applications = sortBy?.ToLower() switch
+        {
+            "loanamount"    => order == "desc"
+                                ? applications.OrderByDescending(a => a.LoanAmount).ToList()
+                                : applications.OrderBy(a => a.LoanAmount).ToList(),
+            "applicantname" => order == "desc"
+                                ? applications.OrderByDescending(a => a.ApplicantName).ToList()
+                                : applications.OrderBy(a => a.ApplicantName).ToList(),
+            _               => applications.OrderByDescending(a => a.AppliedDate).ToList()
+        };
+
+        var totalCount = applications.Count;
+        var data = applications
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(MapToResponse)
+            .ToList();
+
+        return new PagedResultDto<LoanApplicationResponseDto>
+        {
+            TotalCount = totalCount,
+            Page       = page,
+            PageSize   = pageSize,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+            Data       = data
+        };
+    }
 }
