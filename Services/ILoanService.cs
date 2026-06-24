@@ -9,5 +9,5 @@ public interface ILoanService
     Task<LoanApplicationResponseDto?> GetByIdAsync(int id);
     Task<LoanApplicationResponseDto?> GetByApplicationNumberAsync(string applicationNumber);
     Task<DashboardDto> GetDashboardAsync();
-    Task<PagedResultDto<LoanApplicationResponseDto>> GetAllPagedAsync(int page, int pageSize, string? sortBy, string? order);
+    // Task<PagedResultDto<LoanApplicationResponseDto>> GetAllPagedAsync(int page, int pageSize, string? sortBy, string? order);
 }
