@@ -1,6 +1,6 @@
 # Loan Eligibility & Approval System
 
-A REST API built with **ASP.NET Core 8** that evaluates loan applications against 5 predefined business rules and automatically assigns a status: **Approved**, **Rejected**, or **Under Review**.
+A REST API built with **ASP.NET Core 8** that evaluates loan applications against 5 predefined business rules and automatically assigns a status: **Approved**, **Rejected**, or **Under Review**. Includes a lightweight HTML/CSS/JS frontend — no frameworks, no build step.
 
 ---
 
@@ -10,61 +10,90 @@ A REST API built with **ASP.NET Core 8** that evaluates loan applications agains
 |---|---|
 | Backend | ASP.NET Core 8 Web API, C# |
 | ORM | Entity Framework Core 8 (Code-First) |
-| Database | SQL Server (LocalDB) |
+| Database | SQL Server LocalDB |
 | API Docs | Swagger / OpenAPI |
-| Source Control | Git |
+| Frontend | Plain HTML + CSS + JavaScript (single file) |
 
 ---
 
 ## Project Structure
+
+```
 LoanEligibilitySystem/
-
-├── Controllers/    → API endpoints (no business logic)
-├── Services/       → Eligibility engine, EMI calculator, business logic
-├── Repositories/   → Database access layer (EF Core)
-├── Models/         → EF Core entity (LoanApplication)
-├── DTOs/           → Request and response contracts
-├── Data/           → AppDbContext
-├── Middleware/     → Global exception handling
-└── Migrations/     → EF Core migration history
-
+├── Controllers/      → API endpoints
+├── Services/          → Eligibility engine, EMI calculator, business logic
+├── Repositories/    → Database access layer (EF Core)
+├── Models/            → EF Core entity
+├── DTOs/               → Request and response contracts
+├── Data/                → AppDbContext
+├── Middleware/      → Global exception handling
+├── Migrations/      → EF Core migration history
+└── index.html        → Frontend (open directly in browser)
+```
 
 ---
 
-## Setup Instructions
+## Setup & Running
 
 ### Prerequisites
-- .NET 8 SDK
-- SQL Server or SQL Server LocalDB
-- dotnet-ef tools: `dotnet tool install --global dotnet-ef`
+- .NET 8 SDK — https://dotnet.microsoft.com/download
+- SQL Server LocalDB (comes with Visual Studio) or SQL Server Express
+- EF Core tools: `dotnet tool install --global dotnet-ef`
 
 ### Steps
 
-1. Clone the repository:
+**1. Clone the repository**
 ```bash
-   git clone https://github.com/naman-p06/LoanEligibilitySystem.git
-   cd LoanEligibilitySystem
+git clone https://github.com/yourusername/LoanEligibilitySystem.git
+cd LoanEligibilitySystem
 ```
 
-2. Configure the connection string in `appsettings.json`:
+**2. Configure connection string**
+
+Open `appsettings.json` and set your SQL Server connection:
 ```json
-   "ConnectionStrings": {
-     "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=LoanEligibilityDb;Trusted_Connection=True;TrustServerCertificate=True;"
-   }
+"ConnectionStrings": {
+  "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=LoanEligibilityDb;Trusted_Connection=True;TrustServerCertificate=True;"
+}
 ```
 
-3. Apply migrations to create the database:
+For SQL Server Express, use: `Server=.\\SQLEXPRESS`
+
+**3. Create the database**
 ```bash
-   dotnet ef database update
+dotnet ef database update
 ```
 
-4. Run the project:
+**4. Run the backend**
 ```bash
-   dotnet run
+dotnet run
 ```
 
-5. Open Swagger UI:
+The API starts on `http://localhost:5201` (http) and `https://localhost:7201` (https). The exact ports are printed in the terminal.
+
+**5. Open the frontend**
+
+Open `index.html` directly in your browser (double-click the file). Set the API Base URL in the top bar to match your http port (e.g. `http://localhost:5201`) and click **Test Connection** — the dot turns green when connected.
+
+**6. Open Swagger (optional)**
+```
 https://localhost:{port}/swagger
+```
+
+---
+
+## Using the Frontend
+
+The frontend has 4 tabs:
+
+| Tab | What it does |
+|---|---|
+| **Apply** | Fill the form and submit a loan application. Result shows instantly with status and EMI. |
+| **Applications** | View all submitted applications in a paginated table. Change page size (5 / 10 / 20 / 50). Navigate with Prev / Next / page number buttons. |
+| **Search** | Enter an application number (e.g. `APP1001`) to look up a specific application. |
+| **Dashboard** | See aggregate counts — total, approved, rejected, under review — and total approved loan amount. |
+
+> **API Base URL bar** — shown at the top of every page. If your backend runs on a different port, update it here and click Test Connection.
 
 ---
 
@@ -72,18 +101,15 @@ https://localhost:{port}/swagger
 
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/api/loan/apply` | Submit and evaluate a loan application |
-| GET | `/api/loan` | Retrieve all loan applications |
-| GET | `/api/loan/{id}` | Retrieve a specific application by ID |
-| GET | `/api/loan/search?applicationNo=` | Search by application number (e.g. APP1001) |
-| GET | `/api/loan/dashboard` | Aggregate statistics by status |
+| `POST` | `/api/loan/apply` | Submit and evaluate a loan application |
+| `GET` | `/api/loan` | Get all applications (returns full list) |
+| `GET` | `/api/loan/{id}` | Get a specific application by database ID |
+| `GET` | `/api/loan/search?applicationNo=APP1001` | Search by application number |
+| `GET` | `/api/loan/dashboard` | Aggregate statistics by status |
 
----
-
-## Sample Request
+### Sample Request — POST /api/loan/apply
 
 ```json
-POST /api/loan/apply
 {
   "applicantName": "John Smith",
   "age": 30,
@@ -97,7 +123,7 @@ POST /api/loan/apply
 }
 ```
 
-## Sample Response
+### Sample Response
 
 ```json
 {
@@ -107,7 +133,7 @@ POST /api/loan/apply
   "calculatedEMI": 10624.26,
   "status": "Approved",
   "remarks": "Congratulations! Your loan of ₹500000.00 has been approved. Monthly EMI will be ₹10624.26.",
-  "appliedDate": "2026-06-19T10:30:00Z"
+  "appliedDate": "2026-06-24T10:30:00Z"
 }
 ```
 
@@ -115,25 +141,50 @@ POST /api/loan/apply
 
 ## Business Rules
 
-| Rule | Condition | Result |
-|---|---|---|
-| Age Validation | Must be between 21–60 years | Outside range → Rejected |
-| Income Validation | Minimum ₹25,000/month | Below threshold → Rejected |
-| Experience Validation | Salaried ≥ 1 yr, Self-Employed ≥ 2 yrs | Below threshold → Rejected |
-| Credit Score | ≥ 800 → Approved, 700–799 → Under Review, < 700 → Rejected | Determines final status |
-| EMI Affordability | Existing EMI + New EMI ≤ 50% of monthly income | Exceeds limit → Rejected |
+| # | Rule | Condition | Result |
+|---|---|---|---|
+| 1 | Age | Must be 21–60 years | Outside range → Rejected |
+| 2 | Income | Minimum ₹25,000/month | Below threshold → Rejected |
+| 3 | Experience | Salaried ≥ 1 yr, Self-Employed ≥ 2 yrs | Below threshold → Rejected |
+| 4 | Credit Score | ≥ 800 / 700–799 / < 700 | Approved / Under Review / Rejected |
+| 5 | EMI Affordability | Existing EMI + New EMI ≤ 50% of income | Exceeds limit → Rejected |
+
+Rules are evaluated in order — the first failing rule determines the rejection reason.
 
 ---
 
 ## Assumptions
 
 - Annual interest rate is fixed at **10%** for EMI calculation
-- Standard bank EMI formula used: `EMI = P × r × (1+r)^n / ((1+r)^n − 1)`
-- Credit score valid range assumed: **300–900**
-- Application numbers are auto-generated sequentially: APP1001, APP1002, ...
-- Employment type accepts exactly: `Salaried` or `Self-Employed`
+- EMI formula: `EMI = P × r × (1+r)^n / ((1+r)^n − 1)`
+- Credit score valid range: **300–900**
+- Application numbers auto-generated: APP1001, APP1002, ...
+- `employmentType` accepts exactly: `Salaried` or `Self-Employed`
 
----
+
+## API Screenshots
+
+### Swagger UI Home
+![Swagger Home](screenshots/01.png)
+
+### POST /api/loan/apply — Approved
+![Approved](screenshots/02.png)
+
+### POST /api/loan/apply — Rejected
+![Rejected](screenshots/03.png)
+
+### POST /api/loan/apply — Under Review
+![Under Review](screenshots/04.png)
+
+### GET /api/loan — All Applications
+![Get All](screenshots/05.png)
+
+
+### GET /api/loan/search — By Application Number
+![Search](screenshots/07.png)
+
+### GET /api/loan/dashboard — Statistics
+![Dashboard](screenshots/08.png)
 
 ## Author
 

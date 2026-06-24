@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Loan Eligibility System</title>
+<style>
+  :root {
+    --bg: #f5f6fa;
+    --surface: #ffffff;
+    --border: #e2e5ed;
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --primary-light: #eff6ff;
+    --green: #16a34a;
+    --green-bg: #f0fdf4;
+    --green-border: #bbf7d0;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --red-border: #fecaca;
+    --yellow: #b45309;
+    --yellow-bg: #fffbeb;
+    --yellow-border: #fde68a;
+    --text: #111827;
+    --muted: #6b7280;
+    --label: #374151;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .logo { font-size: 15px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .logo span { color: var(--primary); }
+  nav { display: flex; gap: 4px; }
+  nav button { background: none; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; color: var(--muted); cursor: pointer; font-weight: 500; transition: background 0.15s, color 0.15s; }
+  nav button:hover { background: var(--bg); color: var(--text); }
+  nav button.active { background: var(--primary-light); color: var(--primary); }
+
+  .page { display: none; max-width: 900px; margin: 0 auto; padding: 24px 20px; }
+  .page.active { display: block; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
+  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border); color: var(--text); }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 12px; font-weight: 500; color: var(--label); }
+  input, select { padding: 8px 11px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; color: var(--text); background: var(--surface); outline: none; transition: border-color 0.15s; width: 100%; }
+  input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.08); }
+  .hint { font-size: 11px; color: var(--muted); }
+
+  .btn { padding: 9px 20px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: background 0.15s, opacity 0.15s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-outline { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { background: var(--bg); }
+  .btn-outline:disabled { opacity: 0.4; cursor: not-allowed; }
+  .form-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+  .result { border-radius: var(--radius); padding: 18px 20px; margin-top: 20px; display: none; }
+  .result.show { display: block; }
+  .result.approved { background: var(--green-bg); border: 1px solid var(--green-border); }
+  .result.rejected { background: var(--red-bg); border: 1px solid var(--red-border); }
+  .result.review   { background: var(--yellow-bg); border: 1px solid var(--yellow-border); }
+  .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .result-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .approved .result-badge { background: var(--green); color: #fff; }
+  .rejected .result-badge { background: var(--red); color: #fff; }
+  .review   .result-badge { background: var(--yellow); color: #fff; }
+  .result-appno { font-size: 12px; color: var(--muted); }
+  .result-remarks { font-size: 13px; color: var(--text); line-height: 1.6; }
+  .result-emi { font-size: 22px; font-weight: 700; margin-top: 10px; }
+  .approved .result-emi { color: var(--green); }
+  .result-emi-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Table ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { text-align: left; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--bg); }
+  tbody td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: #fafafa; }
+
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 999px; }
+  .badge-approved { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .badge-rejected { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .badge-review   { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
+  .badge-pending  { background: #f3f4f6; color: var(--muted); border: 1px solid var(--border); }
+
+  /* ── Pagination ── */
+  .pagination { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 0; margin-top: 4px; border-top: 1px solid var(--border); }
+  .pagination-info { font-size: 12px; color: var(--muted); }
+  .pagination-controls { display: flex; align-items: center; gap: 6px; }
+  .page-btn { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); transition: background 0.15s; }
+  .page-btn:hover:not(:disabled) { background: var(--bg); }
+  .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .page-btn.current { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .page-size-select { font-size: 12px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 6px; color: var(--text); background: var(--surface); cursor: pointer; }
+
+  /* ── Stats ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 16px; text-align: center; box-shadow: var(--shadow); }
+  .stat-num { font-size: 30px; font-weight: 700; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-card.s-total .stat-num    { color: var(--primary); }
+  .stat-card.s-approved .stat-num { color: var(--green); }
+  .stat-card.s-rejected .stat-num { color: var(--red); }
+  .stat-card.s-review .stat-num   { color: var(--yellow); }
+
+  .search-row { display: flex; gap: 10px; margin-bottom: 20px; }
+  .search-row input { flex: 1; }
+
+  .error-box { background: var(--red-bg); border: 1px solid var(--red-border); border-radius: var(--radius); padding: 12px 16px; font-size: 13px; color: var(--red); margin-top: 14px; display: none; }
+  .error-box.show { display: block; }
+
+  .config-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 11px 16px; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 12px; }
+  .config-bar label { color: var(--muted); white-space: nowrap; }
+  .config-bar input { flex: 1; font-size: 12px; padding: 6px 10px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #d1d5db; flex-shrink: 0; transition: background 0.3s; }
+  .dot.online { background: var(--green); }
+  .dot.offline { background: var(--red); }
+
+  .empty { text-align: center; padding: 48px 0; color: var(--muted); font-size: 13px; }
+  .tbl-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    nav button { padding: 6px 9px; font-size: 12px; }
+    .pagination { flex-direction: column; gap: 10px; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🏦 <span>Loan</span>System</div>
+  <nav>
+    <button class="active" onclick="showPage('apply', this)">Apply</button>
+    <button onclick="showPage('applications', this)">Applications</button>
+    <button onclick="showPage('search', this)">Search</button>
+    <button onclick="showPage('dashboard', this)">Dashboard</button>
+  </nav>
+</header>
+
+<div style="max-width:900px;margin:16px auto 0;padding:0 20px;">
+  <div class="config-bar">
+    <div class="dot" id="statusDot"></div>
+    <label>API Base URL:</label>
+    <input type="text" id="apiBase" value="http://localhost:5201" placeholder="http://localhost:5201" oninput="saveBase()" />
+    <button class="btn btn-outline" style="padding:5px 12px;font-size:12px;white-space:nowrap;" onclick="pingApi()">Test Connection</button>
+  </div>
+</div>
+
+<!-- ══ APPLY ══ -->
+<div class="page active" id="page-apply">
+  <div class="card">
+    <div class="card-title">New Loan Application</div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Applicant Name</label>
+        <input type="text" id="applicantName" placeholder="Full name" />
+      </div>
+      <div class="form-group">
+        <label>Age</label>
+        <input type="number" id="age" placeholder="e.g. 30" min="1" max="120" />
+        <span class="hint">Must be 21–60 years</span>
+      </div>
+      <div class="form-group">
+        <label>Monthly Income (₹)</label>
+        <input type="number" id="monthlyIncome" placeholder="e.g. 60000" min="1" />
+        <span class="hint">Minimum ₹25,000</span>
+      </div>
+      <div class="form-group">
+        <label>Employment Type</label>
+        <select id="employmentType">
+          <option value="">Select type</option>
+          <option value="Salaried">Salaried</option>
+          <option value="Self-Employed">Self-Employed</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Years of Experience</label>
+        <input type="number" id="experienceYears" placeholder="e.g. 3" min="0" max="50" step="0.5" />
+        <span class="hint">Salaried ≥ 1 yr · Self-Employed ≥ 2 yrs</span>
+      </div>
+      <div class="form-group">
+        <label>Existing Monthly EMI (₹)</label>
+        <input type="number" id="existingEMI" placeholder="0 if none" min="0" value="0" />
+      </div>
+      <div class="form-group">
+        <label>Credit Score</label>
+        <input type="number" id="creditScore" placeholder="300–900" min="300" max="900" />
+        <span class="hint">≥ 800 Approved · 700–799 Review · &lt; 700 Rejected</span>
+      </div>
+      <div class="form-group">
+        <label>Loan Amount (₹)</label>
+        <input type="number" id="loanAmount" placeholder="e.g. 500000" min="1" />
+      </div>
+      <div class="form-group">
+        <label>Loan Tenure (months)</label>
+        <input type="number" id="loanTenure" placeholder="e.g. 60" min="1" max="360" />
+        <span class="hint">1–360 months</span>
+      </div>
+    </div>
+    <div class="error-box" id="applyError"></div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="resetForm()">Reset</button>
+      <button class="btn btn-primary" id="submitBtn" onclick="submitApplication()">Submit Application</button>
+    </div>
+  </div>
+
+  <div class="result" id="applyResult">
+    <div class="result-header">
+      <span class="result-badge" id="resultBadge"></span>
+      <span class="result-appno" id="resultAppNo"></span>
+    </div>
+    <div class="result-remarks" id="resultRemarks"></div>
+    <div class="result-emi" id="resultEMI"></div>
+    <div class="result-emi-label" id="resultEMILabel"></div>
+  </div>
+</div>
+
+<!-- ══ APPLICATIONS ══ -->
+<div class="page" id="page-applications">
+  <div class="card">
+    <div class="tbl-header-row">
+      <div class="card-title" style="margin-bottom:0;border:none;padding:0;">All Applications</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <label style="font-size:12px;color:var(--muted);">Per page:</label>
+        <select class="page-size-select" id="pageSizeSelect" onchange="onPageSizeChange()">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+        </select>
+        <button class="btn btn-outline" onclick="loadApplications()" style="font-size:12px;padding:6px 12px;">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div class="table-wrap" style="margin-top:16px;">
+      <table>
+        <thead>
+          <tr>
+            <th>App No.</th>
+            <th>Applicant</th>
+            <th>Loan Amount</th>
+            <th>Monthly EMI</th>
+            <th>Status</th>
+            <th>Applied On</th>
+          </tr>
+        </thead>
+        <tbody id="applicationsBody">
+          <tr><td colspan="6" class="empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination" id="paginationBar" style="display:none;">
+      <div class="pagination-info" id="paginationInfo"></div>
+      <div class="pagination-controls" id="paginationControls"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SEARCH ══ -->
+<div class="page" id="page-search">
+  <div class="card">
+    <div class="card-title">Search by Application Number</div>
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="e.g. APP1001"
+        onkeydown="if(event.key==='Enter') searchApplication()" />
+      <button class="btn btn-primary" onclick="searchApplication()">Search</button>
+    </div>
+    <div class="error-box" id="searchError"></div>
+    <div id="searchResult" style="display:none;">
+      <table>
+        <thead><tr><th>Field</th><th>Value</th></tr></thead>
+        <tbody id="searchResultBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div class="page" id="page-dashboard">
+  <div class="stats-grid">
+    <div class="stat-card s-total">
+      <div class="stat-num" id="dTotal">—</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-card s-approved">
+      <div class="stat-num" id="dApproved">—</div>
+      <div class="stat-label">Approved</div>
+    </div>
+    <div class="stat-card s-rejected">
+      <div class="stat-num" id="dRejected">—</div>
+      <div class="stat-label">Rejected</div>
+    </div>
+    <div class="stat-card s-review">
+      <div class="stat-num" id="dReview">—</div>
+      <div class="stat-label">Under Review</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Total Approved Loan Amount</div>
+    <div style="font-size:30px;font-weight:700;color:var(--green);" id="dTotalAmount">—</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px;">Across all approved applications</div>
+  </div>
+  <div style="text-align:right;">
+    <button class="btn btn-outline" onclick="loadDashboard()" style="font-size:12px;padding:6px 14px;">↻ Refresh</button>
+  </div>
+</div>
+
+<script>
+// ── Config ───────────────────────────────────────────────
+let API = localStorage.getItem('apiBase') || 'http://localhost:5201';
+document.getElementById('apiBase').value = API;
+
+function saveBase() {
+  API = document.getElementById('apiBase').value.replace(/\/$/, '');
+  localStorage.setItem('apiBase', API);
+}
+
+async function pingApi() {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'dot';
+  try {
+    const r = await fetch(`${API}/api/loan/dashboard`, { signal: AbortSignal.timeout(3000) });
+    dot.className = r.ok ? 'dot online' : 'dot offline';
+  } catch { dot.className = 'dot offline'; }
+}
+
+// ── Nav ──────────────────────────────────────────────────
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'applications') loadApplications();
+  if (name === 'dashboard') loadDashboard();
+}
+
+// ── Helpers ──────────────────────────────────────────────
+const fmt = n => '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtDate = d => new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+function statusBadge(s) {
+  const m = { 'Approved': 'approved', 'Rejected': 'rejected', 'Under Review': 'review', 'Pending': 'pending' };
+  return `<span class="badge badge-${m[s]||'pending'}">${s}</span>`;
+}
+function showError(id, msg) { const e = document.getElementById(id); e.textContent = msg; e.classList.add('show'); }
+function clearError(id) { const e = document.getElementById(id); e.textContent = ''; e.classList.remove('show'); }
+
+// ── Apply ────────────────────────────────────────────────
+async function submitApplication() {
+  clearError('applyError');
+  document.getElementById('applyResult').classList.remove('show','approved','rejected','review');
+
+  const body = {
+    applicantName:   document.getElementById('applicantName').value.trim(),
+    age:             parseInt(document.getElementById('age').value),
+    monthlyIncome:   parseFloat(document.getElementById('monthlyIncome').value),
+    employmentType:  document.getElementById('employmentType').value,
+    experienceYears: parseFloat(document.getElementById('experienceYears').value) || 0,
+    existingEMI:     parseFloat(document.getElementById('existingEMI').value) || 0,
+    creditScore:     parseInt(document.getElementById('creditScore').value),
+    loanAmount:      parseFloat(document.getElementById('loanAmount').value),
+    loanTenure:      parseInt(document.getElementById('loanTenure').value),
+  };
+
+  if (!body.applicantName) return showError('applyError', 'Applicant name is required.');
+  if (!body.employmentType) return showError('applyError', 'Please select employment type.');
+  if ([body.age, body.monthlyIncome, body.loanAmount, body.loanTenure, body.creditScore].some(isNaN))
+    return showError('applyError', 'Please fill in all required fields.');
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Submitting…';
+
+  try {
+    const res = await fetch(`${API}/api/loan/apply`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const msg = data.errors ? Object.values(data.errors).flat().join(' ') : (data.message || 'Something went wrong.');
+      return showError('applyError', msg);
+    }
+
+    const clsMap = { 'Approved':'approved', 'Rejected':'rejected', 'Under Review':'review' };
+    const cls = clsMap[data.status] || 'review';
+    const el = document.getElementById('applyResult');
+    el.className = `result show ${cls}`;
+    document.getElementById('resultBadge').textContent = data.status;
+    document.getElementById('resultAppNo').textContent = data.applicationNumber;
+    document.getElementById('resultRemarks').textContent = data.remarks;
+    if (data.status === 'Approved') {
+      document.getElementById('resultEMI').textContent = fmt(data.calculatedEMI) + ' / month';
+      document.getElementById('resultEMILabel').textContent = 'Your Monthly EMI';
+    } else {
+      document.getElementById('resultEMI').textContent = '';
+      document.getElementById('resultEMILabel').textContent = '';
+    }
+  } catch {
+    showError('applyError', `Cannot reach API at ${API}. Make sure the backend is running.`);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Submit Application';
+  }
+}
+
+function resetForm() {
+  ['applicantName','age','monthlyIncome','employmentType','experienceYears','existingEMI','creditScore','loanAmount','loanTenure']
+    .forEach(id => { const el = document.getElementById(id); el.tagName==='SELECT' ? el.value='' : el.value = id==='existingEMI' ? '0' : ''; });
+  clearError('applyError');
+  document.getElementById('applyResult').classList.remove('show','approved','rejected','review');
+}
+
+// ── Applications with pagination ─────────────────────────
+let allApplications = [];   // full list from API
+let currentPage = 1;
+let pageSize = 10;
+
+function onPageSizeChange() {
+  pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+  currentPage = 1;
+  renderTable();
+}
+
+async function loadApplications() {
+  const tbody = document.getElementById('applicationsBody');
+  tbody.innerHTML = '<tr><td colspan="6" class="empty">Loading…</td></tr>';
+  document.getElementById('paginationBar').style.display = 'none';
+
+  try {
+    const res = await fetch(`${API}/api/loan`);
+    const data = await res.json();
+    // Handle both plain array and paginated wrapper
+    allApplications = Array.isArray(data) ? data : (data.data || []);
+    currentPage = 1;
+    renderTable();
+  } catch {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty">Could not load. Is the backend running at ${API}?</td></tr>`;
+  }
+}
+
+function renderTable() {
+  const tbody = document.getElementById('applicationsBody');
+  const paginationBar = document.getElementById('paginationBar');
+
+  if (!allApplications.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">No applications found.</td></tr>';
+    paginationBar.style.display = 'none';
+    return;
+  }
+
+  const total = allApplications.length;
+  const totalPages = Math.ceil(total / pageSize);
+  // clamp currentPage
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const start = (currentPage - 1) * pageSize;
+  const end   = Math.min(start + pageSize, total);
+  const slice = allApplications.slice(start, end);
+
+  tbody.innerHTML = slice.map(a => `
+    <tr>
+      <td style="font-weight:600;font-size:12px;">${a.applicationNumber}</td>
+      <td>${a.applicantName}</td>
+      <td>${fmt(a.loanAmount)}</td>
+      <td>${a.calculatedEMI ? fmt(a.calculatedEMI) : '—'}</td>
+      <td>${statusBadge(a.status)}</td>
+      <td style="color:var(--muted);font-size:12px;">${fmtDate(a.appliedDate)}</td>
+    </tr>`).join('');
+
+  // Pagination info
+  document.getElementById('paginationInfo').textContent =
+    `Showing ${start + 1}–${end} of ${total} application${total !== 1 ? 's' : ''}`;
+
+  // Page buttons
+  const controls = document.getElementById('paginationControls');
+  let btns = '';
+
+  // Prev
+  btns += `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>`;
+
+  // Page number buttons — show smart window
+  const range = pageRange(currentPage, totalPages);
+  range.forEach(p => {
+    if (p === '...') {
+      btns += `<span style="padding:0 4px;color:var(--muted);">…</span>`;
+    } else {
+      btns += `<button class="page-btn ${p === currentPage ? 'current' : ''}" onclick="goToPage(${p})">${p}</button>`;
+    }
+  });
+
+  // Next
+  btns += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>`;
+
+  controls.innerHTML = btns;
+  paginationBar.style.display = 'flex';
+}
+
+// Smart page range: always show first, last, current ± 1, with ellipsis
+function pageRange(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = new Set([1, total, current, current - 1, current + 1].filter(p => p >= 1 && p <= total));
+  const sorted = [...pages].sort((a, b) => a - b);
+  const result = [];
+  sorted.forEach((p, i) => {
+    if (i > 0 && p - sorted[i - 1] > 1) result.push('...');
+    result.push(p);
+  });
+  return result;
+}
+
+function goToPage(p) {
+  const totalPages = Math.ceil(allApplications.length / pageSize);
+  if (p < 1 || p > totalPages) return;
+  currentPage = p;
+  renderTable();
+  // Scroll table into view smoothly
+  document.getElementById('page-applications').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Search ───────────────────────────────────────────────
+async function searchApplication() {
+  const q = document.getElementById('searchInput').value.trim();
+  clearError('searchError');
+  document.getElementById('searchResult').style.display = 'none';
+  if (!q) return showError('searchError', 'Enter an application number like APP1001.');
+
+  try {
+    const res = await fetch(`${API}/api/loan/search?applicationNo=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    if (!res.ok) return showError('searchError', data.message || 'Not found.');
+
+    const rows = [
+      ['Application Number', `<strong>${data.applicationNumber}</strong>`],
+      ['Applicant Name', data.applicantName],
+      ['Loan Amount', fmt(data.loanAmount)],
+      ['Monthly EMI', data.calculatedEMI ? fmt(data.calculatedEMI) : '—'],
+      ['Status', statusBadge(data.status)],
+      ['Remarks', data.remarks],
+      ['Applied Date', fmtDate(data.appliedDate)],
+    ];
+    document.getElementById('searchResultBody').innerHTML =
+      rows.map(([k, v]) => `<tr><td style="color:var(--muted);width:170px;font-size:12px;">${k}</td><td>${v}</td></tr>`).join('');
+    document.getElementById('searchResult').style.display = 'block';
+  } catch {
+    showError('searchError', `Cannot reach API at ${API}.`);
+  }
+}
+
+// ── Dashboard ────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const res = await fetch(`${API}/api/loan/dashboard`);
+    const d = await res.json();
+    document.getElementById('dTotal').textContent    = d.totalApplications;
+    document.getElementById('dApproved').textContent = d.approved;
+    document.getElementById('dRejected').textContent = d.rejected;
+    document.getElementById('dReview').textContent   = d.underReview;
+    document.getElementById('dTotalAmount').textContent = fmt(d.totalLoanAmountApproved);
+  } catch {
+    ['dTotal','dApproved','dRejected','dReview'].forEach(id => document.getElementById(id).textContent = '—');
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────
+pingApi();
+</script>
+</body>
+</html>
